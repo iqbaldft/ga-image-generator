@@ -137,10 +137,36 @@ def clean_duplicates(population):
     return new_population
 
 
-def fitness_calculation(population, image):
+def individu_translate(surface, chromosome):
+    size = surface.get_size()
+    white = (255, 255, 255, 255)
+    surface.fill(white)
+    z = {}
+    for i in range(chromosome):
+        z[chromosome[i][7]] = i
+    z_rank = sorted(z.keys())
+
+    for i in z_rank:
+        # chromosome : [gen, ge, ge, ... , gen]
+        # gen        : [ R, G, B, A, x, y, radius, z]
+        gen = chromosome[i]
+        color = (gen[0], gen[1], gen[2], gen[3])
+        pos = (gen[4], gen[5])
+        radius = gen[6]
+        pygame.draw.circle(surface, color, pos, radius)
+
+    individu = []
+    for x in range(size[0]):
+        for y in range(size[1]):
+            individu.append(surface.get_at((x, y)))
+    return individu
+
+
+def fitness_calculation(surface, population, image):
     # TODO fitness calculation algorithm
     # tiap pixel gambar hasil dibandingkan rgb-nya dengan tujuan
     fitness = []
+
 
 
 
