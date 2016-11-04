@@ -2,12 +2,16 @@
 
 import os
 import sys
+
 import pygame
 
 import ga
 
 
 def main():
+    """
+    the main method for initialization components and more...
+    """
     # initialization
     pygame.init()
 
@@ -32,7 +36,7 @@ def main():
         'crossover_rate': 0.5,
         'mutation_rate': 0.5,
         'total_circle': 128,
-        'max_iteration': 1000,
+        'max_iteration': 150000,
     }
 
     population = ga.new_population(surface, ga_parameter['population_size'], image_target, ga_parameter['total_circle'],
@@ -43,6 +47,16 @@ def main():
 
 
 def play(surface, image_target, population, ga_parameter, grayscale, transparent):
+    """
+    running the GA !!!
+    finally i could evolve more
+    :param surface: pygame surface
+    :param image_target: pygame image the target of reproduce
+    :param population: current population
+    :param ga_parameter: parameter of genetic algorithm
+    :param grayscale: boolean is the image grayscale ?
+    :param transparent: boolean do you want the circle to be transparent ?
+    """
     for iteration in range(ga_parameter['max_iteration']):
         for event in pygame.event.get():
             if event.type == pygame.QUIT or event.type == pygame.K_ESCAPE:
