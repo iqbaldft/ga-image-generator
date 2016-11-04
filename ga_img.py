@@ -205,8 +205,8 @@ def selection(population, population_size, distance):
     while len(population) > population_size:
         out_candidate = distance.index(max(distance))
         population.pop(out_candidate)
+        distance.pop(out_candidate)
     return population
-
 
 
 if __name__ == '__main__':
