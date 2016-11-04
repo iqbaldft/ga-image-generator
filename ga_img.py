@@ -206,7 +206,12 @@ def selection(population, population_size, distance):
         out_candidate = distance.index(max(distance))
         population.pop(out_candidate)
         distance.pop(out_candidate)
-    return population
+    return population, distance
+
+
+def best_individu(population, distance):
+    best_candidate = distance.index(min(distance))
+    return population[best_candidate]
 
 
 if __name__ == '__main__':
