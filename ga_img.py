@@ -186,15 +186,15 @@ def fitness_calculation(surface, population, image):
     # TODO fitness calculation algorithm
     # tiap pixel gambar hasil dibandingkan rgb-nya dengan tujuan
     fitness = []
+    distance = []
     raw_image = image_translate(image)
     population_individu = []
     for chromosome in population:
         population_individu.append(individu_translate(surface, chromosome))
     for individu in population_individu:
         # count the distance
-
-
-
+        distance.append(distance_calc(individu, raw_image))
+    return distance
 
 
 def selection(population, population_size):
