@@ -14,17 +14,18 @@ def main():
     size = image.get_size()
     display_surface = pygame.display.set_mode(size)
     pygame.display.set_caption('GA')
-    white = (255, 255, 255)
-    display_surface.fill(white)
+    #display_surface.blit(image)
+
+
     # pygame.draw.circle(display_surface, (0,0,255), (20,20), 20, 0)
 
     # parameters GA
     ga_parameter = {
-        'population_size': 2,
+        'population_size': 5,
         'crossover_rate': 0.5,
         'mutation_rate': 0.5,
-        'total_circle': 2,
-        'max_iterasi': 10,
+        'total_circle': 100,
+        'max_iterasi': 50,
     }
 
     population = ga_init(display_surface, ga_parameter['population_size'], ga_parameter['total_circle'])
@@ -36,23 +37,27 @@ def play(surface, image, population, ga_parameter):
     iterasi = 0
     while True:
 
-        iterasi += 1
         for event in pygame.event.get():
             if event.type == pygame.QUIT or event.type == pygame.K_ESCAPE:
                 pygame.quit()
                 sys.exit()
 
-        # DO something before update
+        pygame.display.set_caption('iterasi : {}'.format(iterasi))
+        # pygame.display.update()
+        pygame.display.flip()
+
         if iterasi < ga_parameter['max_iterasi']:
+            iterasi += 1
             population = crossover(population, ga_parameter['crossover_rate'])
             population = mutation(population, surface, ga_parameter['total_circle'], ga_parameter['mutation_rate'])
             fitness = fitness_calculation(surface, population, image)
             population, fitness = selection(population, ga_parameter['population_size'], fitness)
             best = best_individu(population, fitness)
             draw_individu(surface, best)
+        else:
+            break
 
-        pygame.display.set_caption('iterasi : {}'.format(iterasi))
-        pygame.display.update()
+
 
 
 def new_gen(surface):
@@ -63,7 +68,7 @@ def new_gen(surface):
     min_x = 0
     max_y = surface_size[1]
     min_y = 0
-    max_radius = min(surface_size)
+    max_radius = min(surface_size)/4
     min_radius = 0
     chromosome = [
         random.randrange(min_color, max_color),  # R
@@ -168,6 +173,7 @@ def draw_individu(surface, chromosome):
         pos = (gen[4], gen[5])
         radius = gen[6]
         pygame.draw.circle(surface, color, pos, radius)
+    # pygame.display.flip()
 
 
 def individu_translate(surface, chromosome):
