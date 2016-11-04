@@ -4,41 +4,54 @@ import sys
 import pygame
 import random
 import math
+import os
 
 
 def main():
     pygame.init()
-
-    size = (128, 200)
+    os.chdir('/home/iko/Pictures/')
+    image = pygame.image.load('iko_mini.jpg')
+    size = image.get_size()
     display_surface = pygame.display.set_mode(size)
-    pygame.display.set_caption('nyaaa')
-    WHITE = (255, 255, 255)
-    display_surface.fill(WHITE)
+    pygame.display.set_caption('GA')
+    white = (255, 255, 255)
+    display_surface.fill(white)
     # pygame.draw.circle(display_surface, (0,0,255), (20,20), 20, 0)
-    play(display_surface)
+
+    # parameters GA
+    ga_parameter = {
+        'population_size': 2,
+        'crossover_rate': 0.5,
+        'mutation_rate': 0.5,
+        'total_circle': 2,
+        'max_iterasi': 10,
+    }
+
+    population = ga_init(display_surface, ga_parameter['population_size'], ga_parameter['total_circle'])
+
+    play(display_surface, image, population, ga_parameter)
 
 
-def play(display_surface):
-    x = 20
-    y = 20
+def play(surface, image, population, ga_parameter):
+    iterasi = 0
     while True:
+
+        iterasi += 1
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+            if event.type == pygame.QUIT or event.type == pygame.K_ESCAPE:
                 pygame.quit()
                 sys.exit()
 
         # DO something before update
+        if iterasi < ga_parameter['max_iterasi']:
+            population = crossover(population, ga_parameter['crossover_rate'])
+            population = mutation(population, surface, ga_parameter['total_circle'], ga_parameter['mutation_rate'])
+            fitness = fitness_calculation(surface, population, image)
+            population, fitness = selection(population, ga_parameter['population_size'], fitness)
+            best = best_individu(population, fitness)
+            draw_individu(surface, best)
 
-        # Testing purpose, delete later
-        x += 20
-        y += 20
-        pygame.draw.circle(display_surface, (0, 0, 255), (x, y), 20)
-        pygame.draw.circle()
-        pygame.time.delay(100)
-        if x % 50 == 0:
-            display_surface.fill((255, 255, 255))
-        # ???
-
+        pygame.display.set_caption('iterasi : {}'.format(iterasi))
         pygame.display.update()
 
 
@@ -53,14 +66,14 @@ def new_gen(surface):
     max_radius = min(surface_size)
     min_radius = 0
     chromosome = [
-        random.randrange(min_color, max_color),     # R
-        random.randrange(min_color, max_color),     # G
-        random.randrange(min_color, max_color),     # B
-        random.randrange(min_color, max_color),     # A
-        random.randrange(min_x, max_x),             # x
-        random.randrange(min_y, max_y),             # y
-        random.randrange(min_radius, max_radius),   # radius
-        random.random(),                            # z
+        random.randrange(min_color, max_color),  # R
+        random.randrange(min_color, max_color),  # G
+        random.randrange(min_color, max_color),  # B
+        random.randrange(min_color, max_color),  # A
+        random.randrange(min_x, max_x),  # x
+        random.randrange(min_y, max_y),  # y
+        random.randrange(min_radius, max_radius),  # radius
+        random.random(),  # z
     ]
     return chromosome
 
@@ -124,7 +137,7 @@ def mutation(population, surface, total_circle, mutation_rate=0.5):
                 if i != mutation_point:
                     child.append(parent[i])
                 else:
-                    child.append(new_chromosome(surface, total_circle))
+                    child.append(new_gen(surface))
             new_population.append(child)
     total_population = population + new_population
     return total_population
@@ -139,18 +152,18 @@ def clean_duplicates(population):
 
 
 def draw_individu(surface, chromosome):
-
     white = (255, 255, 255, 255)
     surface.fill(white)
     z = {}
-    for i in range(chromosome):
-        z[chromosome[i][7]] = i
+    for i in range(len(chromosome)):
+        index = chromosome[i][7]
+        z[index] = i
     z_rank = sorted(z.keys())
 
     for i in z_rank:
         # chromosome : [gen, ge, ge, ... , gen]
         # gen        : [ R, G, B, A, x, y, radius, z]
-        gen = chromosome[i]
+        gen = chromosome[z[i]]
         color = (gen[0], gen[1], gen[2], gen[3])
         pos = (gen[4], gen[5])
         radius = gen[6]
@@ -170,18 +183,19 @@ def individu_translate(surface, chromosome):
 def image_translate(image):
     raw_image = []
     size = image.get_size()
-    for x in size[0]:
-        for y in size[1]:
+    for x in range(size[0]):
+        for y in range(size[1]):
             raw_image.append(image.get_at((x, y)))
     return raw_image
 
 
 def distance_calc(source, target):
     distance = 0
-    for color in range(source):
+    for color in range(len(source)):
         dist = 0
-        for i in range(color):
-            dist += (source[i] - target[i])**2
+        for i in range(len(source[color])):
+            s = source[color][i]
+            dist += (source[color][i] - target[color][i]) ** 2
         distance += math.sqrt(dist)
     return distance
 
@@ -200,17 +214,19 @@ def fitness_calculation(surface, population, image):
     return distance
 
 
-def selection(population, population_size, distance):
+def selection(population, population_size, fitness):
     # TODO selection algorithm
-    while len(population) > population_size:
-        out_candidate = distance.index(max(distance))
+    current_size = len(population)
+    while current_size > population_size:
+        out_candidate = fitness.index(max(fitness))
         population.pop(out_candidate)
-        distance.pop(out_candidate)
-    return population, distance
+        fitness.pop(out_candidate)
+        current_size -= 1
+    return population, fitness
 
 
-def best_individu(population, distance):
-    best_candidate = distance.index(min(distance))
+def best_individu(population, fitness):
+    best_candidate = fitness.index(min(fitness))
     return population[best_candidate]
 
 
