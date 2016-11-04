@@ -162,10 +162,26 @@ def individu_translate(surface, chromosome):
     return individu
 
 
+def image_translate(image):
+    raw_image = []
+    size = image.get_size()
+    for x in size[0]:
+        for y in size[1]:
+            raw_image.append(image.get_at((x, y)))
+    return raw_image
+
+
 def fitness_calculation(surface, population, image):
     # TODO fitness calculation algorithm
     # tiap pixel gambar hasil dibandingkan rgb-nya dengan tujuan
     fitness = []
+    raw_image = image_translate(image)
+    population_individu = []
+
+
+
+    for chromosome in population:
+        population_individu.append(individu_translate(surface, chromosome))
 
 
 
