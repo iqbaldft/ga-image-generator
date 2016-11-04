@@ -129,10 +129,19 @@ def mutation(population, surface, total_circle, mutation_rate=0.5):
     return total_population
 
 
-def fitness_calculation(population):
+def clean_duplicates(population):
+    new_population = []
+    for chromosome in population:
+        if chromosome not in new_population:
+            new_population.append(chromosome)
+    return new_population
+
+
+def fitness_calculation(population, image):
     # TODO fitness calculation algorithm
-    # tiap pixel gambar dibandingkan rgb-nya dengan tujuan
+    # tiap pixel gambar hasil dibandingkan rgb-nya dengan tujuan
     fitness = []
+
 
 
 
