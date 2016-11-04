@@ -3,6 +3,7 @@
 import sys
 import pygame
 import random
+import math
 
 
 def main():
@@ -171,17 +172,26 @@ def image_translate(image):
     return raw_image
 
 
+def distance_calc(source, target):
+    distance = 0
+    for color in range(source):
+        dist = 0
+        for i in range(color):
+            dist += (source[i] - target[i])**2
+        distance += math.sqrt(dist)
+    return distance
+
+
 def fitness_calculation(surface, population, image):
     # TODO fitness calculation algorithm
     # tiap pixel gambar hasil dibandingkan rgb-nya dengan tujuan
     fitness = []
     raw_image = image_translate(image)
     population_individu = []
-
-
-
     for chromosome in population:
         population_individu.append(individu_translate(surface, chromosome))
+    for individu in population_individu:
+        # count the distance
 
 
 
