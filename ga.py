@@ -9,13 +9,15 @@ import random
 class Individu:
     index = 0
 
-    def __init__(self, surface, image_target, chromosome, transparent=True):
+    def __init__(self, surface, image_target, chromosome, grayscale=False, transparent=True):
         self.id = Individu.index
         Individu.index += 1
         self.surface = surface
         self.chromosome = chromosome
         self.image_target = image_target
         self.transparent = transparent
+        self.grayscale = grayscale
+
         self.draw()
         self.fitness = self._distance_calc()
 
@@ -25,7 +27,6 @@ class Individu:
         # self.surface.fill(self.background)
         # self.surface.set_colorkey(self.background)
         white = (255, 255, 255, 255)
-        black = (0, 0, 0, 255)
         self.surface.fill(white)
         # self.surface.set_colorkey(black)
         z = {}
@@ -35,12 +36,11 @@ class Individu:
         z_rank = sorted(z.keys())
 
         for i in z_rank:
+            width, height = self.surface.get_size()
+            s = pygame.Surface((width/2, height))
             if self.transparent:
-                s = pygame.Surface(self.surface.get_size())
                 s.fill(white)
                 s.set_colorkey(white)
-            else:
-                s = self.surface
             # chromosome : [gen, ge, ge, ... , gen]
             # gen        : [ R, G, B, A, x, y, radius, z]
             gen = self.chromosome[z[i]]
@@ -58,7 +58,7 @@ class Individu:
         self.draw()
         width, height = self.surface.get_size()
         self.raw_color = []
-        for x in range(width):
+        for x in range(width//2):
             for y in range(height):
                 if individu_:
                     self.raw_color.append(self.surface.get_at((x, y)))
@@ -71,11 +71,11 @@ class Individu:
         target_raw_color = self._image_raw_color(False)
         distance = 0
         for color in range(0, len(raw_color), 2):
-            dist = 0
-            for i in range(len(raw_color[color]) - 1):
-                dist += math.fabs(raw_color[color][i] - target_raw_color[color][i])
-            distance += dist
-
+            if not self.grayscale:
+                for i in range(len(raw_color[color]) - 1):
+                    distance += math.fabs(raw_color[color][i] - target_raw_color[color][i])
+            else:
+                distance += math.fabs(raw_color[color][0] - target_raw_color[color][0])
         return distance
 
 
@@ -125,11 +125,11 @@ def new_chromosome(surface, total_circle, grayscale=False):
 def new_population(surface, population_size, image_target, total_circle, grayscale=False, transparent=True):
     population = []
     for i in range(population_size):
-        population.append(Individu(surface, image_target, new_chromosome(surface, total_circle, grayscale), transparent))
+        population.append(Individu(surface, image_target, new_chromosome(surface, total_circle, grayscale), grayscale, transparent))
     return population
 
 
-def crossover(surface, parent1, parent2, image_target, transparent=True):
+def crossover(surface, parent1, parent2, image_target, grayscale=False, transparent=True):
     parent_chromosome1 = parent1.chromosome
     parent_chromosome2 = parent2.chromosome
     child_chromosome1 = []
@@ -143,12 +143,12 @@ def crossover(surface, parent1, parent2, image_target, transparent=True):
         else:
             child_chromosome1.append(parent_chromosome2[i])
             child_chromosome2.append(parent_chromosome1[i])
-    child1 = Individu(surface, image_target, child_chromosome1, transparent)
-    child2 = Individu(surface, image_target, child_chromosome2, transparent)
+    child1 = Individu(surface, image_target, child_chromosome1, grayscale, transparent)
+    child2 = Individu(surface, image_target, child_chromosome2, grayscale, transparent)
     return child1, child2
 
 
-def population_crossover(surface, population, image_target, crossover_rate=0.5, transparent=True):
+def population_crossover(surface, population, image_target, crossover_rate=0.5, grayscale=False, transparent=True):
     parent1 = None
     parent2 = None
     offspring = []
@@ -161,7 +161,7 @@ def population_crossover(surface, population, image_target, crossover_rate=0.5, 
             else:
                 parent2 = candidate
         if parent2 is not None:
-            child1, child2 = crossover(surface, parent1, parent2, image_target, transparent)
+            child1, child2 = crossover(surface, parent1, parent2, image_target, grayscale, transparent)
             offspring.append(child1)
             offspring.append(child2)
             parent1 = None
@@ -180,7 +180,7 @@ def mutation(surface, parent, image_target, grayscale=False, transparent=True):
             child_chromosome.append(parent_chromosome[i])
         else:
             child_chromosome.append(new_gen(surface, grayscale))
-    child = Individu(surface, image_target, child_chromosome, transparent)
+    child = Individu(surface, image_target, child_chromosome, grayscale, transparent)
     return child
 
 

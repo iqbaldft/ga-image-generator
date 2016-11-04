@@ -13,22 +13,22 @@ def main():
 
     # load image target
     os.chdir('/home/iko/Pictures/')
-    image_target = pygame.image.load('c.png')
-    grayscale = True
+    image_target = pygame.image.load('iko_mini.jpg')
+    grayscale = False
     transparent = True
 
     # setting surface
-    size = image_target.get_size()
-    surface = pygame.display.set_mode(size)
+    width, height = image_target.get_size()
+    surface = pygame.display.set_mode((width*2, height))
     pygame.display.set_caption('GA')
 
     # showing image target in the beginning of program
-    surface.blit(image_target, (0, 0))
+    surface.blit(image_target, (width, 0))
     pygame.display.flip()
 
     # setting ga parameter
     ga_parameter = {
-        'population_size': 2,
+        'population_size': 5,
         'crossover_rate': 0.5,
         'mutation_rate': 0.5,
         'total_circle': 128,
@@ -57,7 +57,7 @@ def play(surface, image_target, population, ga_parameter, grayscale, transparent
             # crossover
             # print('{}:cross'.format(iteration))
             population = ga.population_crossover(surface, population, image_target, ga_parameter['crossover_rate'],
-                                                 transparent)
+                                                 grayscale, transparent)
             # mutation
             # print('{}:mutate'.format(iteration))
             population = ga.population_mutation(surface, population, image_target, ga_parameter['mutation_rate'],
@@ -72,7 +72,8 @@ def play(surface, image_target, population, ga_parameter, grayscale, transparent
             # print('i{}:p{}'.format(iteration, len(population)))
         else:
             break
-
+        width, height = surface.get_size()
+        surface.blit(image_target, (width/2, 0))
         pygame.display.update()
         # pygame.display.flip()
     pygame.image.save(surface, 'hasil.png')
