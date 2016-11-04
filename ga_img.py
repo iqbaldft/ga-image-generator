@@ -138,8 +138,8 @@ def clean_duplicates(population):
     return new_population
 
 
-def individu_translate(surface, chromosome):
-    size = surface.get_size()
+def draw_individu(surface, chromosome):
+
     white = (255, 255, 255, 255)
     surface.fill(white)
     z = {}
@@ -156,6 +156,10 @@ def individu_translate(surface, chromosome):
         radius = gen[6]
         pygame.draw.circle(surface, color, pos, radius)
 
+
+def individu_translate(surface, chromosome):
+    draw_individu(surface, chromosome)
+    size = surface.get_size()
     individu = []
     for x in range(size[0]):
         for y in range(size[1]):
@@ -183,7 +187,6 @@ def distance_calc(source, target):
 
 
 def fitness_calculation(surface, population, image):
-    # TODO fitness calculation algorithm
     # tiap pixel gambar hasil dibandingkan rgb-nya dengan tujuan
     fitness = []
     distance = []
@@ -197,9 +200,13 @@ def fitness_calculation(surface, population, image):
     return distance
 
 
-def selection(population, population_size):
+def selection(population, population_size, distance):
     # TODO selection algorithm
-    print('belum... udah ngantuk dulu, ikan bobo... lanjut besok lagi yaa...')
+    while len(population) > population_size:
+        out_candidate = distance.index(max(distance))
+        population.pop(out_candidate)
+    return population
+
 
 
 if __name__ == '__main__':
