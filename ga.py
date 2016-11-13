@@ -12,6 +12,7 @@ class Individu:
     class for each individual in this genetic algorithm
     """
     index = 0
+    target_raw = None
 
     def __init__(self, surface, image_target, chromosome, grayscale=False, transparent=True):
         """
@@ -94,14 +95,16 @@ class Individu:
         :return: integer sum of all the distance of each color of the pixel
         """
         raw_color = self._image_raw_color()
-        target_raw_color = self._image_raw_color(False)
+        if Individu.target_raw is None:
+            Individu.target_raw = self._image_raw_color(False)
+
         distance = 0
         for color in range(0, len(raw_color), 2):
             if not self.grayscale:
                 for i in range(len(raw_color[color]) - 1):
-                    distance += math.fabs(raw_color[color][i] - target_raw_color[color][i])
+                    distance += math.fabs(raw_color[color][i] - Individu.target_raw[color][i])
             else:
-                distance += math.fabs(raw_color[color][0] - target_raw_color[color][0])
+                distance += math.fabs(raw_color[color][0] - Individu.target_raw[color][0])
         return distance
 
 
@@ -115,11 +118,11 @@ def new_gene(surface, grayscale=False):
     surface_size = surface.get_size()
     max_color = 255
     min_color = 0
-    max_x = surface_size[0]
+    max_x = surface_size[0] // 2
     min_x = 0
     max_y = surface_size[1]
     min_y = 0
-    max_radius = min(surface_size) / 4
+    max_radius = min(surface_size) // 4
     min_radius = 0
     gene = None
     if not grayscale:
@@ -180,6 +183,23 @@ def new_population(surface, population_size, image_target, total_circle, graysca
     return population
 
 
+def choose_candidates(population, rate):
+    fitnesses = [i.fitness for i in population]
+    total_fitness = sum(fitnesses)
+    roulette_wheel = []
+
+    for i in range(len(fitnesses)):
+        roulette_wheel.append((fitnesses[i] / total_fitness) + (sum(roulette_wheel) - sum(roulette_wheel[:-1])))
+    candidates = []
+    while len(candidates) < (len(population) * rate):
+        r = random.random()
+        for i in range(len(roulette_wheel)):
+            if r < roulette_wheel[i]:
+                candidates.append(population[i])
+                break
+    return candidates
+
+
 def crossover(surface, parent1, parent2, image_target, grayscale=False, transparent=True):
     """
     function to add a couple of new children from a couple of parents with (currently) one point crossover method
@@ -193,17 +213,11 @@ def crossover(surface, parent1, parent2, image_target, grayscale=False, transpar
     """
     parent_chromosome1 = parent1.chromosome
     parent_chromosome2 = parent2.chromosome
-    child_chromosome1 = []
-    child_chromosome2 = []
     cross_point = random.randrange(0, len(parent_chromosome1))
 
-    for i in range(len(parent_chromosome1)):
-        if i < cross_point:
-            child_chromosome1.append(parent_chromosome1[i])
-            child_chromosome2.append(parent_chromosome2[i])
-        else:
-            child_chromosome1.append(parent_chromosome2[i])
-            child_chromosome2.append(parent_chromosome1[i])
+    child_chromosome1 = parent_chromosome1[:cross_point] + parent_chromosome2[cross_point:]
+    child_chromosome2 = parent_chromosome2[:cross_point] + parent_chromosome1[cross_point:]
+
     child1 = Individu(surface, image_target, child_chromosome1, grayscale, transparent)
     child2 = Individu(surface, image_target, child_chromosome2, grayscale, transparent)
     return child1, child2
@@ -221,23 +235,20 @@ def population_crossover(surface, population, image_target, crossover_rate=0.5, 
     :param transparent: boolean to determine if the circles of reproduction using transparency or not
     :return: new population which contains the old population and the new offspring
     """
+    candidates = choose_candidates(population, crossover_rate)
     parent1 = None
-    parent2 = None
     offspring = []
+    for candidate in candidates:
+        if parent1 is None:
+            parent1 = candidate
+        else:
+            parent2 = candidate
 
-    for candidate in population:
-        r = random.random()
-        if r > crossover_rate:
-            if parent1 is None:
-                parent1 = candidate
-            else:
-                parent2 = candidate
-        if parent2 is not None:
             child1, child2 = crossover(surface, parent1, parent2, image_target, grayscale, transparent)
             offspring.append(child1)
             offspring.append(child2)
+
             parent1 = None
-            parent2 = None
     total_population = population + offspring
     return total_population
 
@@ -253,14 +264,10 @@ def mutation(surface, parent, image_target, grayscale=False, transparent=True):
     :return: Individu the mutant child, which is only a gene different with his parent !
     """
     parent_chromosome = parent.chromosome
-    child_chromosome = []
     mutation_point = random.randrange(0, len(parent_chromosome))
 
-    for i in range(len(parent_chromosome)):
-        if i != mutation_point:
-            child_chromosome.append(parent_chromosome[i])
-        else:
-            child_chromosome.append(new_gene(surface, grayscale))
+    child_chromosome = parent_chromosome.copy()
+    child_chromosome[mutation_point] = new_gene(surface, grayscale)
     child = Individu(surface, image_target, child_chromosome, grayscale, transparent)
     return child
 
@@ -279,12 +286,12 @@ def population_mutation(surface, population, image_target, mutation_rate=0.5, gr
     :return: a new population which contains the new mutants! don't worry though, the old population is still there
     """
     offspring = []
+    candidates = choose_candidates(population, mutation_rate)
 
-    for candidate in population:
-        r = random.random()
-        if r > mutation_rate:
-            child = mutation(surface, candidate, image_target, grayscale, transparent)
-            offspring.append(child)
+    for candidate in candidates:
+        child = mutation(surface, candidate, image_target, grayscale, transparent)
+        offspring.append(child)
+
     total_population = population + offspring
     return total_population
 
